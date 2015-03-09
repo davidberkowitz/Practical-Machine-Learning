@@ -18,7 +18,7 @@
 
 ### Feature selection (reduce the number of columns)
 
-Many of the columns are statistcal calculations (min\_, max\_, avg\_,
+Many of the columns are statistical calculations (min\_, max\_, avg\_,
 stddev\_, var\_, skewness\_, kurtosis\_) on the raw data measurements. I
 chose to build my classifier only on raw data columns: gyro\_, accel\_
 and magnet\_.
@@ -104,8 +104,8 @@ and magnet\_.
     ## Detection Prevalence   0.2877   0.1917   0.1789   0.1592   0.1825
     ## Balanced Accuracy      0.9959   0.9872   0.9870   0.9800   0.9944
 
-This simple predictor does quite well with a 99.4% accuracy, exceeding
-the OOB estimated error rate of 1.71%.
+This simple predictor does quite well with 98.38% accuracy, which is in
+line with the OOB estimated error rate of 1.55%.
 
 ### Predict based on the real testing set
 
@@ -119,8 +119,8 @@ the OOB estimated error rate of 1.71%.
     ##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
     ## Levels: A B C D E
 
-It should be noted that this "simple" classifier was sufficient to
-predict correctly all 20 values for the course project submission :-)
+This "simple" classifier was sufficient to correctly predict all 20
+values for the course project submission.
 
 ### Cross Validation
 

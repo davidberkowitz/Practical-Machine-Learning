@@ -41,7 +41,7 @@ if (file.exists ("training.RDS"))
 
 ### Feature selection (reduce the number of columns)
 
-Many of the columns are statistcal calculations (min_, max_, avg_, stddev_, var_, skewness_, kurtosis_) on the raw data measurements. I chose to build my classifier only on raw data columns: gyro_, accel_ and magnet_. 
+Many of the columns are statistical calculations (min_, max_, avg_, stddev_, var_, skewness_, kurtosis_) on the raw data measurements. I chose to build my classifier only on raw data columns: gyro_, accel_ and magnet_. 
 
 ```{r}
 names = names (data.raw) # get the list of column names
@@ -81,7 +81,7 @@ predictions = predict (rf, myTesting)
 confusionMatrix (predictions, myTesting$classe)
 ```
 
-This simple predictor does quite well with a 99.4% accuracy, exceeding the OOB estimated error rate of 1.71%.
+This simple predictor does quite well with 98.38% accuracy, which is in line with the OOB estimated error rate of 1.55%.
 
 ### Predict based on the real testing set
 
@@ -106,7 +106,7 @@ pml_write_files = function(x){
 pml_write_files (predictions)
 ```
 
-It should be noted that this "simple" classifier was sufficient to predict correctly all 20 values for the course project submission :-)
+This "simple" classifier was sufficient to correctly predict all 20 values for the course project submission.
 
 ### Cross Validation
 
@@ -150,8 +150,8 @@ rf = crossValidate ("pedro"); rf
 
 ```{r, echo=FALSE}
 names = c ("adelmo", "carlitos", "charles", "eurico", "jeremy", "pedro")
-oobErrorRates = c (0.82, 0.84, 0.82, 0.93, 0.83, 0.81)
-accuracy = c (0.27, 0.58, 0.58, 0.18, 0.55, 0.22)
+oobErrorRates = c (0.83, 0.79, 0.75, 0.90, 0.86, 0.81)
+accuracy = c (0.283, 0.578, 0.562, 0.177, 0.568, 0.194)
 ```
 
 ##### Results

@@ -68,7 +68,7 @@ set.seed (123)</code></pre>
 </div>
 <div id="feature-selection-reduce-the-number-of-columns" class="section level3">
 <h3>Feature selection (reduce the number of columns)</h3>
-<p>Many of the columns are statistcal calculations (min_, max_, avg_, stddev_, var_, skewness_, kurtosis_) on the raw data measurements. I chose to build my classifier only on raw data columns: gyro_, accel_ and magnet_.</p>
+<p>Many of the columns are statistical calculations (min_, max_, avg_, stddev_, var_, skewness_, kurtosis_) on the raw data measurements. I chose to build my classifier only on raw data columns: gyro_, accel_ and magnet_.</p>
 <pre class="r"><code>names = names (data.raw) # get the list of column names
 
 gyros = grep (&quot;^gyros&quot;, names)
@@ -146,7 +146,7 @@ confusionMatrix (predictions, myTesting$classe)</code></pre>
 ## Detection Rate         0.2837   0.1891   0.1714   0.1577   0.1819
 ## Detection Prevalence   0.2877   0.1917   0.1789   0.1592   0.1825
 ## Balanced Accuracy      0.9959   0.9872   0.9870   0.9800   0.9944</code></pre>
-<p>This simple predictor does quite well with a 99.4% accuracy, exceeding the OOB estimated error rate of 1.71%.</p>
+<p>This simple predictor does quite well with 98.38% accuracy, which is in line with the OOB estimated error rate of 1.55%.</p>
 </div>
 <div id="predict-based-on-the-real-testing-set" class="section level3">
 <h3>Predict based on the real testing set</h3>
@@ -158,7 +158,7 @@ predictions = predict (rf, testingData); predictions</code></pre>
 <pre><code>##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
 ##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
 ## Levels: A B C D E</code></pre>
-<p>It should be noted that this “simple” classifier was sufficient to predict correctly all 20 values for the course project submission :-)</p>
+<p>This “simple” classifier was sufficient to correctly predict all 20 values for the course project submission.</p>
 </div>
 <div id="cross-validation" class="section level3">
 <h3>Cross Validation</h3>
