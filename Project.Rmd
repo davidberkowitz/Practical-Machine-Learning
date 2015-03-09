@@ -1,0 +1,164 @@
+---
+title: "Project - Practical Machine Learning"
+author: "David Berkowitz"
+date: "March 3, 2015"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+```{r}
+library (caret, quietly=TRUE)
+library (randomForest, quietly=TRUE)
+set.seed (123)
+```
+
+### Read in the data
+
+```{r, echo=FALSE}
+if (file.exists ("training.RDS"))
+  {
+  # efficient RDS exists, read it
+  print ("RDS exists, reading it")
+  data.raw = readRDS ("training.RDS")
+  print (".")
+  } else
+  {
+  # read the CSV
+  print ("RDS does NOT exist, reading the CSV")  
+  
+  data.raw = read.csv ("pml-training.csv")
+  print (".")
+  
+  # create the efficient RDS
+  print ("creating the RDS")
+  saveRDS (data.raw, "training.RDS")
+  print (".")
+  }  
+```
+
+### Feature selection (reduce the number of columns)
+
+Many of the columns are statistcal calculations (min_, max_, avg_, stddev_, var_, skewness_, kurtosis_) on the raw data measurements. I chose to build my classifier only on raw data columns: gyro_, accel_ and magnet_. 
+
+```{r}
+names = names (data.raw) # get the list of column names
+
+gyros = grep ("^gyros", names)
+accel = grep ("^accel", names)
+magnet = grep ("^magnet", names)
+class = grep ("^classe", names) # add the activity column
+user = grep ("^user", names) # add the user name column
+
+data = data.raw [, c(gyros, accel, magnet, class, user)] # only include wanted columns
+data = na.omit (data) # omit NA values which are not appreciated by later functions
+```
+
+### Partition the data
+
+```{r}
+dp = createDataPartition (y = data$classe, p = 0.6, list=FALSE)
+myTraining = data [dp,] # training set has random 60%
+myTesting = data [-dp, ] # testing set has the remaining 40%
+
+a = nrow (data) ; b = nrow (myTraining) ; c = nrow (myTesting)
+check = a - b - c
+cbind (a, b, c, check) # check should equal 0
+```
+
+### Create the classifier based on my training set
+
+```{r}
+rf = randomForest (classe ~ ., data=myTraining); rf
+```
+
+### Evaluate the classifier based on my testing set
+
+```{r}
+predictions = predict (rf, myTesting)
+confusionMatrix (predictions, myTesting$classe)
+```
+
+This simple predictor does quite well with a 99.4% accuracy, exceeding the OOB estimated error rate of 1.71%.
+
+### Predict based on the real testing set
+
+```{r}
+testingData = read.csv ("pml-testing.csv")
+testingData = testingData [, c(gyros, accel, magnet, class, user)] # same dataset filtering as before
+testingData = na.omit (testingData)
+
+predictions = predict (rf, testingData); predictions
+```
+
+```{r, echo=FALSE}
+# provided function to write individual files for each row
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+pml_write_files (predictions)
+```
+
+It should be noted that this "simple" classifier was sufficient to predict correctly all 20 values for the course project submission :-)
+
+### Cross Validation
+
+```{r}
+table (data$user_name, data$classe)
+#ggplot (data, aes (x=classe)) + geom_bar() + facet_wrap (~ user_name)
+```
+
+There appear to be sufficient data points for each activity for each user. I will cross validate by user_name.
+
+```{r}
+crossValidate = function (name)
+  {
+  testingRowNumbers = training = testing = NULL
+  a = b = c = check = NULL
+  rf = cm = NULL
+  
+  testingRowNumbers = grep (name, data$user_name)
+  training = data [-testingRowNumbers,]
+  testing = data [testingRowNumbers,]
+  
+  a = nrow (data) ; b = nrow (training) ; c = nrow (testing); check = a - b - c
+  cbind (a, b, c, check) # check should equal 0
+  
+  rf = randomForest (classe ~ ., data=training)
+  predictions = predict (rf, testing)
+  cm = confusionMatrix (predictions, testing$classe)
+  cat (name, "accuracy= ", cm$overall ["Accuracy"], "\n")
+  return (rf);
+  }
+```
+
+```{r}
+rf = crossValidate ("adelmo"); rf
+rf = crossValidate ("carlitos"); rf
+rf = crossValidate ("charles"); rf
+rf = crossValidate ("eurico"); rf
+rf = crossValidate ("jeremy"); rf
+rf = crossValidate ("pedro"); rf
+```
+
+```{r, echo=FALSE}
+names = c ("adelmo", "carlitos", "charles", "eurico", "jeremy", "pedro")
+oobErrorRates = c (0.82, 0.84, 0.82, 0.93, 0.83, 0.81)
+accuracy = c (0.27, 0.58, 0.58, 0.18, 0.55, 0.22)
+```
+
+##### Results
+
+```{r}
+cbind (names, oobErrorRates, accuracy)
+
+mean (oobErrorRates) # average expected error rate (percentage)
+mean (accuracy) # average measured accuracy
+```
