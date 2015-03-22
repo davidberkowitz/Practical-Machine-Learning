@@ -59,6 +59,7 @@ data = na.omit (data) # omit NA values which are not appreciated by later functi
 ### Partition the data
 
 ```{r}
+set.seed (12345)
 dp = createDataPartition (y = data$classe, p = 0.6, list=FALSE)
 myTraining = data [dp,] # training set has random 60%
 myTesting = data [-dp, ] # testing set has the remaining 40%
@@ -154,7 +155,7 @@ oobErrorRates = c (0.83, 0.79, 0.75, 0.90, 0.86, 0.81)
 accuracy = c (0.283, 0.578, 0.562, 0.177, 0.568, 0.194)
 ```
 
-##### Results
+### Results
 
 ```{r}
 cbind (names, oobErrorRates, accuracy)
@@ -162,3 +163,129 @@ cbind (names, oobErrorRates, accuracy)
 mean (oobErrorRates) # average expected error rate (percentage)
 mean (accuracy) # average measured accuracy
 ```
+
+# Further Investigations
+
+After the later video lectures I wanted to start over and apply some of the techniques discussed.
+Here are the results.
+
+### Read in the data set
+
+```{r}
+setwd ("/Users/davidberkowitz/Projects/coursera/Practical Machine Learning")
+
+data = read.csv ("pml-training.csv", 
+                        header=TRUE, 
+                        as.is = TRUE,
+                        stringsAsFactors = FALSE, 
+                        #sep=',',
+                        )
+dim (data)
+summary (data)
+```
+
+There are 160 columns in the raw data set.
+
+### Remove columns with NAs
+
+```{r}
+NAindex = apply (data, 2, function(x) {sum(is.na(x))})
+NAindex
+data = data [,which (NAindex == 0)]
+
+dim (data)
+summary (data)
+```
+
+Number of columns reduced from 160 to 93.
+
+### Preprocess the numeric columns. Preserve the outcome column.
+
+```{r}
+c = data$classe # save
+
+v = which (lapply (data, class) %in% "numeric") # numerica columns only
+v
+
+ppo = preProcess (data [,v], method=c ('knnImpute', 'center', 'scale'))
+data <- predict (ppo, data [,v])
+
+data$classe = as.factor (c) # restore
+
+dim (data)
+summary (data)
+str (data)
+```
+
+### Remove columns with near zero variance
+
+```{r}
+nzv <- nearZeroVar (data, saveMetrics=TRUE)
+nzv
+data = data [,nzv$nzv==FALSE]
+
+dim (data)
+summary (data)
+str (data)
+```
+
+Number of columns reduced from 93 to 28. Pretty good compared to the original 160.
+
+### Partition the data into training and test sets. 
+
+Note that all preprocessing/cleaning of the data is performed **before** the partitioning.
+
+```{r}
+set.seed (12345)
+
+dp = createDataPartition (y = data$classe, p = 0.6, list=FALSE)
+myTraining = data [dp,] # training set has random 60%
+myTesting = data [-dp, ] # testing set has the remaining 40%
+
+dim (myTraining)
+dim (myTesting)
+```
+
+### Train the model - fit
+
+```{r}
+fit = randomForest (classe ~ ., data=myTraining)
+fit
+plot (fit)
+
+imp = varImp (fit)
+imp
+```
+
+Expected error rate of 0.8% sounds pretty good to me :-)
+
+### Train the model in a slightly different way - fit2
+
+Note this method takes a **loooong** time.
+
+```{r}
+fit2 = train (classe ~.,
+              method="rf",
+              data=myTraining,
+              trControl=trainControl (method='cv'), number=5, allowParallel=TRUE )
+fit2
+
+imp = varImp (fit2)
+imp
+```
+
+Note that this model was cross validated 10 fold.
+
+### Check against the test set - both fit and fit2
+
+```{r}
+predictions = predict (fit, myTesting) #fit
+confusionMatrix (predictions, myTesting$classe)
+
+predictions = predict (fit2, myTesting) #fit2
+confusionMatrix (predictions, myTesting$classe)
+```
+
+### Conclusion
+
+The accuracy of the second model, which takes much longer to calculate, is **not** more accurate than the first model. In either case, I am very happy with a 99% accuracy.
